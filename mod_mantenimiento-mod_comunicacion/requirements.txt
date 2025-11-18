@@ -1,0 +1,10 @@
+flask
+flask-sqlalchemy
+flask_socketio
+Flask-Login
+Flask-JWT-Extended
+Flask
+werkzeug
+reportlab
+python-engineio
+eventlet
