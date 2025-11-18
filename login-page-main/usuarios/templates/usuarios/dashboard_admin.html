@@ -1,0 +1,259 @@
+<!-- usuarios/templates/usuarios/dashboard_admin.html -->
+{% extends "usuarios/base_dashboard.html" %}
+{% load static %}
+{% block title %}Panel del Administrador{% endblock %}
+{% block section_title %}Panel del Administrador{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <!-- FILA SUPERIOR -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title text-primary fw-bold">LUZ</h5>
+          <div class="image-container" onclick="openModal('http://26.136.135.135:5000/serie_tiempo?servicio=luz&color=yellow')">
+            <img id="imgCampo1" src="" alt="Imagen 1" class="img-fluid" style="max-height:180px;">
+          </div>
+          <p class="text-muted mt-2 small">Estadisticas de Luz</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title text-success fw-bold">AGUA</h5>
+          <div class="image-container" onclick="openModal('http://26.136.135.135:5000/serie_tiempo?servicio=agua')">
+            <img id="imgCampo2" src="" alt="Imagen 2" class="img-fluid" style="max-height:180px;">
+          </div>
+          <p class="text-muted mt-2 small">Estadisticas de Agua</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title text-warning fw-bold">GAS</h5>
+          <div class="image-container" onclick="openModal('http://26.136.135.135:5000/serie_tiempo?servicio=gas&color=red')">
+            <img id="imgCampo3" src="" alt="Imagen 3" class="img-fluid" style="max-height:180px;">
+          </div>
+          <p class="text-muted mt-2 small">Estadisticas de Gas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILA MEDIA -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title text-info fw-bold">Ingresos</h5>
+          <div class="image-container" onclick="openModal('http://26.136.135.135:5000/ingresos?color=green')">
+            <img id="imgCampo4" src="" alt="Imagen 4" class="img-fluid" style="max-height:220px;">
+          </div>
+          <p class="text-muted mt-2 small">Balance de Ingresos</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title text-danger fw-bold">Facturas</h5>
+          <div class="image-container" onclick="openModal('http://26.136.135.135:5000/facturas')">
+            <img id="imgCampo5" src="" alt="Imagen de facturas" class="img-fluid" style="max-height:220px;">
+          </div>
+          <p class="text-muted mt-2 small">Distribucion de Facturas </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOQUE DE PREDICCIONES -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body text-center">
+      <h4 class="fw-bold text-primary">📈 Campo de Predicciones</h4>
+
+      <!-- Formulario de predicción -->
+      <div class="row justify-content-center mb-3">
+        <div class="col-md-4">
+          <input type="number" id="departamentoInput" class="form-control" placeholder="Departamento" min="1" required>
+        </div>
+        <div class="col-md-4">
+          <select id="servicioInput" class="form-select" required>
+            <option value="">-- Servicio --</option>
+            <option value="luz">Luz</option>
+            <option value="agua">Agua</option>
+            <option value="gas">Gas</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button id="btnObtenerPrediccion" class="btn btn-primary w-100">Obtener Predicción</button>
+        </div>
+      </div>
+
+      <!-- Área de resultado -->
+      <div id="prediccionesContainer" class="p-3 border rounded bg-light" style="min-height:200px;">
+        <p class="text-secondary fst-italic">Esperando datos de predicción...</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal para imagen grande -->
+<div id="imageModal" class="modal" onclick="closeModal()" style="display:none;">
+  <span class="close" onclick="closeModal()" style="position:absolute; top:15px; right:35px; color:white; font-size:40px; font-weight:bold; cursor:pointer;">&times;</span>
+  <img class="modal-content" id="modalImage" style="margin:auto; display:block; max-width:90%; max-height:90%;">
+</div>
+
+<style>
+  /* Efecto de zoom al pasar el mouse */
+  .image-container {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .image-container img {
+    transition: transform 0.3s ease;
+  }
+  .image-container:hover img {
+    transform: scale(1.1);
+  }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    padding-top: 60px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.9);
+  }
+  .modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 900px;
+  }
+  @media (max-width: 768px) {
+    .modal-content {
+      width: 100%;
+    }
+  }
+</style>
+
+<!-- ... (todo igual hasta el <script>) ... -->
+
+<script>
+  // === CARGA SECUENCIAL DE IMÁGENES ===
+  document.addEventListener("DOMContentLoaded", function() {
+    const imagenes = [
+      { id: "imgCampo1", url: "http://26.136.135.135:5000/serie_tiempo?servicio=luz&color=yellow" },
+      { id: "imgCampo2", url: "http://26.136.135.135:5000/serie_tiempo?servicio=agua" },
+      { id: "imgCampo3", url: "http://26.136.135.135:5000/serie_tiempo?servicio=gas&color=red" },
+      { id: "imgCampo4", url: "http://26.136.135.135:5000/ingresos?color=green" },
+      { id: "imgCampo5", url: "http://26.136.135.135:5000/facturas" }
+    ];
+
+    let index = 0;
+
+    function cargarSiguienteImagen() {
+      if (index >= imagenes.length) return;
+
+      const img = document.getElementById(imagenes[index].id);
+      img.src = imagenes[index].url;
+      img.onerror = function() {
+        // ✅ CORREGIDO: añadido "data:"
+        img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23f8f9fa'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='12' fill='%236c757d' text-anchor='middle' dominant-baseline='middle'%3EError%3C/text%3E%3C/svg%3E";
+      };
+
+      index++;
+      setTimeout(cargarSiguienteImagen, 500);
+    }
+
+    cargarSiguienteImagen();
+  });
+
+  // === MODAL DE IMAGEN ===
+  function openModal(imgUrl) {
+    const modal = document.getElementById("imageModal");
+    const modalImg = document.getElementById("modalImage");
+    modal.style.display = "block";
+    modalImg.src = imgUrl;
+    // Si falla la imagen en el modal, mostrar error
+    modalImg.onerror = function() {
+      modalImg.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Crect width='100%25' height='100%25' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='white' text-anchor='middle'%3EImagen no disponible%3C/text%3E%3C/svg%3E";
+    };
+  }
+
+  function closeModal() {
+    document.getElementById("imageModal").style.display = "none";
+  }
+
+  // === FUNCIONALIDAD DE PREDICCIÓN CON TIMEOUT ===
+  function fetchWithTimeout(url, timeout = 15000) {
+    return Promise.race([
+      fetch(url),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Tiempo de espera agotado (15s)')), timeout)
+      )
+    ]);
+  }
+
+  document.getElementById('btnObtenerPrediccion').addEventListener('click', async function() {
+    const departamento = document.getElementById('departamentoInput').value.trim();
+    const servicio = document.getElementById('servicioInput').value.trim();
+
+    if (!departamento || !servicio) {
+      alert("Por favor, completa ambos campos.");
+      return;
+    }
+
+    const url = `http://26.136.135.135:5000/prediccion?dpto=${encodeURIComponent(departamento)}&servicio=${encodeURIComponent(servicio)}`;
+
+    const container = document.getElementById('prediccionesContainer');
+    container.innerHTML = `
+      <p class="text-info">Consultando predicción... (puede tardar hasta 15 segundos)</p>
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+    `;
+
+    try {
+      const response = await fetchWithTimeout(url, 15000);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      let resultado;
+      try {
+        const data = await response.json();
+        resultado = `
+          <div class="alert alert-success">
+            <strong>Departamento:</strong> ${data.departamento}<br>
+            <strong>Servicio:</strong> ${data.servicio}<br>
+            <strong>Predicción:</strong> ${data.prediccion}
+          </div>
+        `;
+      } catch (e) {
+        const texto = await response.text();
+        resultado = `<div class="alert alert-success"><strong>Predicción:</strong> ${texto.trim()}</div>`;
+      }
+
+      container.innerHTML = resultado;
+    } catch (error) {
+      container.innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+    }
+  });
+</script>
+{% endblock %}

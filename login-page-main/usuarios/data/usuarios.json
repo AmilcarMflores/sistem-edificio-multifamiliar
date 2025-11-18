@@ -1,0 +1,43 @@
+[
+    {
+        "usuario": "admin",
+        "password": "Manuel123.",
+        "rol": "administrador",
+        "nombre": "Manuel Angel Illanes Francisco",
+        "correo": "many211001@gmail.com",
+        "telefono": "61134775",
+        "must_change_password": false
+    },
+    {
+        "usuario": "Andres",
+        "password": "12345678",
+        "rol": "residente",
+        "nombre": "Andres Illanes Burgoa",
+        "correo": "Andres@gmail.com",
+        "must_change_password": false
+    },
+    {
+        "usuario": "sary",
+        "password": "12345678",
+        "rol": "residente",
+        "nombre": "Sara Illanes francisco",
+        "correo": "sary@gmail.com",
+        "must_change_password": false
+    },
+    {
+        "usuario": "tere",
+        "password": "12345678",
+        "rol": "residente",
+        "nombre": "Teraza Francisco Soliz",
+        "correo": "techita@gmail.com",
+        "must_change_password": false
+    },
+    {
+        "usuario": "prueba",
+        "password": "12345678",
+        "rol": "residente",
+        "nombre": "Pepito Perez",
+        "correo": "pepito@gmail.com",
+        "must_change_password": false
+    }
+]
