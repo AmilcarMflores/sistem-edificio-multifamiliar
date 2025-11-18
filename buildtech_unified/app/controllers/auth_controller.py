@@ -30,7 +30,7 @@ def esta_bloqueado():
     set_intentos_fallidos(0)
     return False
 
-@auth_bp.route('/')
+@auth_bp.route('/', methods=['GET', 'POST'])
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
