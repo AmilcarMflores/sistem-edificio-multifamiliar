@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>💰 Resumen Financiero</h2>
+    
+    <div class="financial-summary">
+        <div class="summary-cards">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>💵 Ingresos del Mes</h5>
+                    <h3>Bs. {{ "%.2f"|format(total_ingresos) }}</h3>
+                    <small>Cargos: Bs. {{ "%.2f"|format(ingresos_cargos) }} | Reservas: Bs. {{ "%.2f"|format(ingresos_reservas) }}</small>
+                </div>
+            </div>
+            
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>💸 Gastos del Mes</h5>
+                    <h3>Bs. {{ "%.2f"|format(total_gastos) }}</h3>
+                    <small>{{ mes_actual }}</small>
+                </div>
+            </div>
+            
+            <div class="card {% if balance >= 0 %}bg-primary{% else %}bg-warning{% endif %} text-white">
+                <div class="card-body">
+                    <h5>📊 Balance</h5>
+                    <h3>Bs. {{ "%.2f"|format(balance) }}</h3>
+                    <small>Ingresos - Gastos</small>
+                </div>
+            </div>
+            
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5>⏳ Pendientes</h5>
+                    <h3>Bs. {{ "%.2f"|format(total_pendiente_cargos + total_pendiente_reservas) }}</h3>
+                    <small>Por cobrar</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5>📋 Cargos Mensuales Pendientes</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if cargos_pendientes %}
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Dpto</th>
+                                    <th>Período</th>
+                                    <th>Monto</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cargo in cargos_pendientes[:10] %}
+                                <tr>
+                                    <td>{{ cargo.departamento }}</td>
+                                    <td>{{ cargo.mes_nombre }} {{ cargo.anio }}</td>
+                                    <td>Bs. {{ "%.2f"|format(cargo.total) }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('finanzas.pagar_pendiente', tipo_pago='cargo', pk=cargo.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-success">Marcar Pagado</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted">No hay cargos pendientes</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5>🎫 Pagos de Reservas Pendientes</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if pagos_reservas_pendientes %}
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Reserva #</th>
+                                    <th>Monto</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pago in pagos_reservas_pendientes[:10] %}
+                                <tr>
+                                    <td>#{{ pago.reserva_id }}</td>
+                                    <td>Bs. {{ "%.2f"|format(pago.monto) }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('finanzas.pagar_pendiente', tipo_pago='reserva', pk=pago.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-success">Marcar Pagado</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p class="text-muted">No hay pagos de reservas pendientes</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

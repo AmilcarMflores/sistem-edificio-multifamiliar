@@ -1,0 +1,173 @@
+<!-- app/templates/reservas/reservas.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>📅 Reservar Área Común</h2>
+    
+    <!-- Formulario de Reserva -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5>Nueva Reserva</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="reservaForm">
+                        <div class="mb-3">
+                            <label for="area_id">🏢 Selecciona el Área</label>
+                            <select name="area_id" id="area_id" class="form-control" required onchange="actualizarInfoArea()">
+                                <option value="">-- Selecciona un área --</option>
+                                {% for area in areas %}
+                                <option value="{{ area.id }}" 
+                                        data-costo="{{ area.costo_hora }}"
+                                        data-capacidad="{{ area.capacidad }}"
+                                        data-descripcion="{{ area.descripcion }}"
+                                        data-apertura="{{ area.hora_apertura.strftime('%H:%M') }}"
+                                        data-cierre="{{ area.hora_cierre.strftime('%H:%M') }}">
+                                    {{ area.nombre }} - Bs. {{ "%.2f"|format(area.costo_hora) }}/hora
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div id="areaInfo" style="display:none;" class="alert alert-info mb-3">
+                            <strong id="areaNombre"></strong><br>
+                            <small id="areaDescripcion"></small><br>
+                            <small>👥 Capacidad: <span id="areaCapacidad"></span> personas</small><br>
+                            <small>🕐 Horario: <span id="areaHorario"></span></small><br>
+                            <small>💰 Costo: Bs. <span id="areaCosto"></span>/hora</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="fecha">📅 Fecha de Reserva</label>
+                            <input type="date" name="fecha" id="fecha" class="form-control" required 
+                                   min="{{ fecha_minima }}" onchange="verificarDisponibilidad()">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="hora_inicio">🕐 Hora Inicio</label>
+                                <input type="time" name="hora_inicio" id="hora_inicio" class="form-control" required onchange="calcularCosto()">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="hora_fin">🕐 Hora Fin</label>
+                                <input type="time" name="hora_fin" id="hora_fin" class="form-control" required onchange="calcularCosto()">
+                            </div>
+                        </div>
+                        
+                        <div id="costoEstimado" class="alert alert-success" style="display:none;">
+                            <strong>💰 Costo Total Estimado:</strong> Bs. <span id="costoTotal">0.00</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="num_personas">👥 Número de Personas</label>
+                            <input type="number" name="num_personas" id="num_personas" class="form-control" 
+                                   value="1" min="1" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="motivo">📝 Motivo de la Reserva</label>
+                            <textarea name="motivo" id="motivo" class="form-control" rows="3" 
+                                      placeholder="Ej: Cumpleaños, Reunión familiar..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">✅ Confirmar Reserva</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mis Próximas Reservas -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5>📋 Mis Próximas Reservas</h5>
+                </div>
+                <div class="card-body">
+                    {% if mis_reservas %}
+                        {% for reserva in mis_reservas %}
+                        <div class="reserva-mini">
+                            <strong>{{ reserva.area.nombre }}</strong>
+                            <span class="badge bg-{{ 'success' if reserva.estado == 'confirmada' else 'warning' }}">
+                                {{ reserva.estado|upper }}
+                            </span>
+                            <br>
+                            <small>📅 {{ reserva.fecha.strftime('%d/%m/%Y') }}</small><br>
+                            <small>🕐 {{ reserva.hora_inicio.strftime('%H:%M') }} - {{ reserva.hora_fin.strftime('%H:%M') }}</small><br>
+                            <small>💰 Bs. {{ "%.2f"|format(reserva.costo_total) }}</small>
+                            <div class="mt-2">
+                                <a href="{{ url_for('reservas.editar_reserva', reserva_id=reserva.id) }}" 
+                                   class="btn btn-sm btn-warning">Editar</a>
+                                <form method="POST" action="{{ url_for('reservas.eliminar_reserva', reserva_id=reserva.id) }}" 
+                                      style="display:inline;" onsubmit="return confirm('¿Cancelar esta reserva?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
+                                </form>
+                            </div>
+                        </div>
+                        <hr>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No tienes reservas próximas</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fecha mínima (hoy)
+document.getElementById('fecha').min = new Date().toISOString().split('T')[0];
+
+function actualizarInfoArea() {
+    const select = document.getElementById('area_id');
+    const option = select.options[select.selectedIndex];
+    
+    if (option.value) {
+        document.getElementById('areaInfo').style.display = 'block';
+        document.getElementById('areaNombre').textContent = option.text.split(' - ')[0];
+        document.getElementById('areaDescripcion').textContent = option.dataset.descripcion;
+        document.getElementById('areaCapacidad').textContent = option.dataset.capacidad;
+        document.getElementById('areaHorario').textContent = option.dataset.apertura + ' - ' + option.dataset.cierre;
+        document.getElementById('areaCosto').textContent = parseFloat(option.dataset.costo).toFixed(2);
+        
+        // Establecer límites de hora
+        document.getElementById('hora_inicio').min = option.dataset.apertura;
+        document.getElementById('hora_fin').max = option.dataset.cierre;
+    } else {
+        document.getElementById('areaInfo').style.display = 'none';
+    }
+}
+
+function calcularCosto() {
+    const select = document.getElementById('area_id');
+    const option = select.options[select.selectedIndex];
+    const horaInicio = document.getElementById('hora_inicio').value;
+    const horaFin = document.getElementById('hora_fin').value;
+    
+    if (option.value && horaInicio && horaFin) {
+        const inicio = new Date('2000-01-01 ' + horaInicio);
+        const fin = new Date('2000-01-01 ' + horaFin);
+        const horas = (fin - inicio) / (1000 * 60 * 60);
+        
+        if (horas > 0) {
+            const costo = parseFloat(option.dataset.costo) * horas;
+            document.getElementById('costoTotal').textContent = costo.toFixed(2);
+            document.getElementById('costoEstimado').style.display = 'block';
+        } else {
+            document.getElementById('costoEstimado').style.display = 'none';
+        }
+    }
+}
+</script>
+
+<style>
+.reserva-mini {
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}
