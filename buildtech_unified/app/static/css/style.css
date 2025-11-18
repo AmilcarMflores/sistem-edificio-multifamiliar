@@ -1,4 +1,9 @@
 /* ============================================
+   BUILDTECH - STYLE.CSS MEJORADO
+   Sistema de Gestión Integral para Edificios
+============================================ */
+
+/* ============================================
    RESET Y BASE
 ============================================ */
 * {
@@ -73,6 +78,7 @@ nav ul {
 
 nav ul li {
     display: inline;
+    position: relative; /* ✅ AGREGADO para dropdown */
 }
 
 nav a {
@@ -92,6 +98,65 @@ nav a {
 nav a:hover {
     background: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
+}
+
+/* ✅ DROPDOWN MEJORADO */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-toggle {
+    cursor: pointer;
+    user-select: none;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    min-width: 220px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+    z-index: 1000;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown:hover .dropdown-menu,
+.dropdown.active .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu li {
+    display: block;
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: #333;
+    text-decoration: none;
+    transition: background 0.2s;
+    border-radius: 0;
+}
+
+.dropdown-menu a:hover {
+    background: #f0f0f0;
+    transform: none;
 }
 
 /* Badge de notificaciones */
@@ -142,6 +207,15 @@ footer {
     margin-top: auto;
     width: 100%;
     font-size: 0.9rem;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
 }
 
 /* ============================================
@@ -391,7 +465,12 @@ footer {
     color: white;
 }
 
-.button {
+.btn-warning {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+}
+
+.btn-secondary, .button {
     background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
     color: white;
 }
@@ -436,6 +515,7 @@ footer {
 .control input[type="email"],
 .control input[type="password"],
 .control input[type="date"],
+.control input[type="time"],
 .control input[type="number"],
 .control input[type="file"],
 .control textarea,
@@ -471,165 +551,6 @@ footer {
 }
 
 /* ============================================
-   PÁGINAS DE AUTENTICACIÓN
-============================================ */
-.auth-body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem;
-}
-
-.auth-container {
-    width: 100%;
-    max-width: 500px;
-}
-
-.auth-card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: var(--shadow-lg);
-    padding: 2.5rem;
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.auth-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.auth-header h1 {
-    font-size: 2rem;
-    color: var(--dark);
-    margin-bottom: 0.5rem;
-}
-
-.auth-header h2 {
-    font-size: 1.5rem;
-    color: var(--dark);
-    margin-bottom: 0.5rem;
-}
-
-.auth-header p {
-    color: var(--gray);
-    font-size: 0.95rem;
-}
-
-.auth-form .field {
-    margin-bottom: 1.5rem;
-}
-
-.auth-footer {
-    text-align: center;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #e0e0e0;
-}
-
-.auth-footer p {
-    color: #666;
-}
-
-.auth-footer a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.auth-footer a:hover {
-    text-decoration: underline;
-}
-
-/* ============================================
-   INFO Y DETALLES
-============================================ */
-.ticket-info {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 1.5rem;
-    border-radius: var(--radius);
-    margin-bottom: 1.5rem;
-    border-left: 4px solid var(--primary);
-}
-
-.ticket-info p {
-    margin-bottom: 0.5rem;
-}
-
-.detail-section {
-    margin-bottom: 2rem;
-}
-
-.detail-section h3 {
-    color: var(--dark);
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--primary);
-}
-
-/* ============================================
-   EVIDENCIA
-============================================ */
-.evidence-container {
-    text-align: center;
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: var(--radius);
-}
-
-.evidence-image {
-    max-width: 100%;
-    max-height: 500px;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    transition: var(--transition);
-}
-
-.evidence-image:hover {
-    transform: scale(1.02);
-}
-
-.current-evidence {
-    margin-top: 0.5rem;
-    font-style: italic;
-    color: #666;
-}
-
-/* ============================================
-   ACCIONES Y SECCIONES
-============================================ */
-.actions {
-    white-space: nowrap;
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.actions-section {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 2px solid #e0e0e0;
-    text-align: center;
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-/* ============================================
    ESTADOS VACÍOS
 ============================================ */
 .no-tickets, .no-notifications {
@@ -661,6 +582,27 @@ footer {
 }
 
 /* ============================================
+   ACCIONES Y SECCIONES
+============================================ */
+.actions {
+    white-space: nowrap;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.actions-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e0e0e0;
+    text-align: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ============================================
    RESPONSIVE
 ============================================ */
 @media (max-width: 768px) {
@@ -673,6 +615,23 @@ footer {
     nav ul {
         flex-wrap: wrap;
         justify-content: center;
+    }
+    
+    /* ✅ Dropdown móvil */
+    .dropdown-menu {
+        position: static;
+        box-shadow: none;
+        background: rgba(255,255,255,0.1);
+        margin-top: 0;
+    }
+    
+    .dropdown-menu a {
+        color: white;
+        padding-left: 2rem;
+    }
+    
+    .dropdown-menu a:hover {
+        background: rgba(255,255,255,0.15);
     }
 
     main {
@@ -711,18 +670,6 @@ footer {
         width: 100%;
         margin-bottom: 0.5rem;
     }
-
-    .auth-card {
-        padding: 1.5rem;
-    }
-
-    .auth-header h1 {
-        font-size: 1.5rem;
-    }
-
-    .auth-header h2 {
-        font-size: 1.2rem;
-    }
 }
 
 @media (max-width: 480px) {
@@ -743,4 +690,23 @@ footer {
         padding: 0.5rem 1rem;
         font-size: 0.85rem;
     }
+}
+
+/* ============================================
+   UTILIDADES
+============================================ */
+.text-muted {
+    color: #666 !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.mt-4 {
+    margin-top: 1.5rem !important;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem !important;
 }
