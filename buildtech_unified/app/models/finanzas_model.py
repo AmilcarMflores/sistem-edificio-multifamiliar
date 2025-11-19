@@ -1,7 +1,7 @@
-# app/models/finanzas_model.py
+# app/models/finanzas_model.py - VERSIÓN MEJORADA
 """
-Modelos de Finanzas - Convertido de Django a Flask/SQLAlchemy
-Gestión de cargos mensuales y pagos del edificio
+Modelos de Finanzas - Mejorado con más funcionalidades
+Gestión de cargos mensuales, pagos y gastos del edificio
 """
 
 from database import db
@@ -47,6 +47,12 @@ class CargoMensual(db.Model):
         self.mantenimiento = Decimal(str(mantenimiento))
         self.expensas_comunes = Decimal(str(expensas_comunes))
         self.pagado = False
+        
+        # Establecer fecha de vencimiento (día 10 del mes siguiente)
+        if mes == 12:
+            self.fecha_vencimiento = date(anio + 1, 1, 10)
+        else:
+            self.fecha_vencimiento = date(anio, mes + 1, 10)
     
     @property
     def total(self):
@@ -63,6 +69,20 @@ class CargoMensual(db.Model):
                  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
         return meses[self.mes] if 1 <= self.mes <= 12 else 'Desconocido'
     
+    @property
+    def esta_vencido(self):
+        """Verifica si el cargo está vencido"""
+        if self.pagado:
+            return False
+        return date.today() > self.fecha_vencimiento if self.fecha_vencimiento else False
+    
+    @property
+    def dias_vencido(self):
+        """Calcula los días de mora"""
+        if not self.esta_vencido:
+            return 0
+        return (date.today() - self.fecha_vencimiento).days
+    
     def marcar_pagado(self):
         """Marca el cargo como pagado"""
         self.pagado = True
@@ -71,6 +91,10 @@ class CargoMensual(db.Model):
     
     def save(self):
         db.session.add(self)
+        db.session.commit()
+    
+    def update(self):
+        """Actualizar cargo existente"""
         db.session.commit()
     
     def delete(self):
@@ -110,16 +134,38 @@ class CargoMensual(db.Model):
             cargo = CargoMensual(
                 departamento=departamento,
                 mes=hoy.month,
-                anio=hoy.year
+                anio=hoy.year,
+                luz=150.00,  # Valores por defecto
+                agua=80.00,
+                gas=60.00,
+                mantenimiento=200.00,
+                expensas_comunes=150.00
             )
             cargo.save()
         
         return cargo
     
     @staticmethod
+    def get_all():
+        """Obtiene todos los cargos"""
+        return CargoMensual.query.order_by(
+            CargoMensual.anio.desc(), 
+            CargoMensual.mes.desc()
+        ).all()
+    
+    @staticmethod
     def get_all_pendientes():
         """Obtiene todos los cargos pendientes (para admin)"""
         return CargoMensual.query.filter_by(pagado=False).all()
+    
+    @staticmethod
+    def get_by_mes_pagados(mes, anio):
+        """Obtiene cargos pagados de un mes específico"""
+        return CargoMensual.query.filter_by(
+            mes=mes,
+            anio=anio,
+            pagado=True
+        ).all()
     
     @staticmethod
     def get_total_recaudado_mes(mes, anio):
@@ -132,6 +178,13 @@ class CargoMensual(db.Model):
         
         total = sum(cargo.total for cargo in cargos)
         return float(total)
+    
+    @staticmethod
+    def get_vencidos():
+        """Obtiene todos los cargos vencidos"""
+        hoy = date.today()
+        cargos = CargoMensual.query.filter_by(pagado=False).all()
+        return [c for c in cargos if c.fecha_vencimiento and c.fecha_vencimiento < hoy]
 
 
 class PagoReserva(db.Model):
@@ -150,7 +203,7 @@ class PagoReserva(db.Model):
     
     # Método de pago
     metodo_pago = db.Column(db.String(50), nullable=True)
-    # Valores posibles: 'efectivo', 'transferencia', 'tarjeta'
+    # Valores posibles: 'efectivo', 'transferencia', 'tarjeta', 'qr'
     
     # Referencia de pago
     referencia = db.Column(db.String(100), nullable=True)
@@ -227,7 +280,7 @@ class GastoEdificio(db.Model):
     
     # Categoría
     categoria = db.Column(db.String(50), nullable=False)
-    # Valores: 'mantenimiento', 'servicios', 'personal', 'equipamiento', 'otros'
+    # Valores: 'mantenimiento', 'servicios', 'personal', 'equipamiento', 'limpieza', 'seguridad', 'otros'
     
     # Fecha del gasto
     fecha_gasto = db.Column(db.Date, nullable=False)
@@ -235,6 +288,9 @@ class GastoEdificio(db.Model):
     # Metadatos
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     registrado_por = db.Column(db.String(100), nullable=True)
+    
+    # Comprobante
+    comprobante = db.Column(db.String(200), nullable=True)  # URL del comprobante
     
     def __init__(self, concepto, monto, categoria, fecha_gasto=None, 
                  descripcion=None, registrado_por=None):
@@ -247,6 +303,10 @@ class GastoEdificio(db.Model):
     
     def save(self):
         db.session.add(self)
+        db.session.commit()
+    
+    def update(self):
+        """Actualizar gasto"""
         db.session.commit()
     
     def delete(self):
@@ -283,6 +343,21 @@ class GastoEdificio(db.Model):
     def get_by_categoria(categoria):
         """Obtiene gastos por categoría"""
         return GastoEdificio.query.filter_by(categoria=categoria).all()
+    
+    @staticmethod
+    def get_total_por_categoria(mes=None, anio=None):
+        """Obtiene totales agrupados por categoría"""
+        if mes and anio:
+            gastos = GastoEdificio.get_by_mes(mes, anio)
+        else:
+            gastos = GastoEdificio.get_all()
+        
+        totales = {}
+        for gasto in gastos:
+            cat = gasto.categoria
+            totales[cat] = totales.get(cat, 0) + float(gasto.monto)
+        
+        return totales
 
 
 class HistorialPago(db.Model):
@@ -355,3 +430,76 @@ class HistorialPago(db.Model):
         return HistorialPago.query.order_by(
             HistorialPago.fecha_pago.desc()
         ).all()
+    
+    @staticmethod
+    def get_by_mes(mes, anio):
+        """Obtiene pagos de un mes específico"""
+        from sqlalchemy import extract
+        return HistorialPago.query.filter(
+            extract('month', HistorialPago.fecha_pago) == mes,
+            extract('year', HistorialPago.fecha_pago) == anio
+        ).all()
+    
+    @staticmethod
+    def get_total_recaudado(mes=None, anio=None):
+        """Calcula el total recaudado"""
+        if mes and anio:
+            pagos = HistorialPago.get_by_mes(mes, anio)
+        else:
+            pagos = HistorialPago.get_all()
+        
+        return sum(float(p.monto) for p in pagos)
+
+
+# ============================================================================
+# FUNCIONES DE INICIALIZACIÓN
+# ============================================================================
+
+def generar_cargos_todos_departamentos():
+    """
+    Función auxiliar para generar cargos del mes actual para todos los departamentos
+    Útil para ejecutar al inicio de cada mes
+    """
+    from models.user_model import User
+    
+    residentes = User.query.filter(User.departamento.isnot(None)).all()
+    departamentos = list(set([r.departamento for r in residentes]))
+    
+    hoy = date.today()
+    mes_actual = hoy.month
+    anio_actual = hoy.year
+    
+    for dept in departamentos:
+        cargo = CargoMensual.get_or_create_mes_actual(dept)
+        print(f"✓ Cargo generado para Dpto {dept}: Bs. {cargo.total:.2f}")
+    
+    print(f"\n✅ Cargos generados para {len(departamentos)} departamentos")
+
+
+def enviar_recordatorios_pago():
+    """
+    Función auxiliar para enviar recordatorios de pago
+    Se puede ejecutar como tarea programada
+    """
+    from models.user_model import User
+    from utils.email_utils import enviar_email_recordatorio_pago
+    
+    cargos_vencidos = CargoMensual.get_vencidos()
+    
+    departamentos_morosos = {}
+    for cargo in cargos_vencidos:
+        dept = cargo.departamento
+        if dept not in departamentos_morosos:
+            departamentos_morosos[dept] = []
+        departamentos_morosos[dept].append(cargo)
+    
+    for dept, cargos in departamentos_morosos.items():
+        usuario = User.query.filter_by(departamento=dept).first()
+        if usuario and usuario.email:
+            try:
+                enviar_email_recordatorio_pago(usuario, cargos)
+                print(f"✓ Recordatorio enviado a Dpto {dept}")
+            except Exception as e:
+                print(f"✗ Error al enviar a Dpto {dept}: {e}")
+    
+    print(f"\n✅ Recordatorios enviados a {len(departamentos_morosos)} departamentos")
